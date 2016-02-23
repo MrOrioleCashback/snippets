@@ -25,7 +25,8 @@ print(is_palindrome('Racecar'))
 
 
 def my_sqrt(a,x):
-	"""Newton's method is a method for finding successively better
+	"""
+	Newton's method is a method for finding successively better
 	approximations (x) to the roots (or zeroes) of a real-valued
 	function (a)
 	"""

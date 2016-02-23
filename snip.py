@@ -13,7 +13,7 @@ print(fabonacci(14))
 
 def is_palindrome(sequence):
 	"""
-	Checks if sequence is a palindrome, returns true or false
+	Checks if sequence is a palindrome, returns boolean
 	"""
 	sequence = str(sequence).lower()
 	for index, letter in enumerate(sequence):

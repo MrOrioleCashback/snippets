@@ -71,3 +71,46 @@ def invert_dict(dic):
     return inverse
     
 print(invert_dict(histogram_with_get('parrot')))
+
+
+def fabonacci(n):
+    """
+    Return the n'th number of the fabonacci sequence
+    """
+    if n == 0:
+        return 0
+    elif n == 1:
+        return 1
+    else:
+        return fabonacci(n-1) + fabonacci(n-2)
+
+#print(fabonacci(40)) #[Finished in 64.7s]
+
+
+known = {0:0, 1:1}
+
+def fabonacci_with_memo(n):
+    if n in known:
+        return known[n]
+    result = fabonacci_with_memo(n-1) + fabonacci_with_memo(n-2)
+    known[n] = result
+    print(n, known)
+    return result
+
+#print(fabonacci_with_memo(40)) #[Finished in 0.1s]
+
+
+count = 0
+
+def counter():
+    count += 1
+    return(count)
+
+#print(counter()) #UnboundLocalError: local variable 'count' referenced before assignment
+
+def counter_global():
+    global count
+    count += 1
+    return(count)
+
+#print(counter_global())    

@@ -94,7 +94,6 @@ def fabonacci_with_memo(n):
         return known[n]
     result = fabonacci_with_memo(n-1) + fabonacci_with_memo(n-2)
     known[n] = result
-    print(n, known)
     return result
 
 #print(fabonacci_with_memo(40)) #[Finished in 0.1s]

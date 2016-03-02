@@ -65,12 +65,12 @@ def invert_dict(dic):
     for key in dic:
         value = dic[key]
         if value not in inverse:
-            inverse[value] = [key]
+            inverse[value] = key
         else:
             inverse[value].append(key)
     return inverse
     
-print(invert_dict(histogram_with_get('parrot')))
+#print(invert_dict(histogram_with_get('parrot')))
 
 
 def fabonacci(n):
@@ -114,3 +114,100 @@ def counter_global():
     return(count)
 
 #print(counter_global())    
+
+
+
+#----------------------------------------------------------
+fin = open('words.txt')
+
+
+
+
+def word_dict_search(file, search_word):
+    word_keys = dict()
+    for line in file:
+        word = line.strip()
+        word_keys[word] = 0
+    if search_word in word_keys:
+        return True
+    return False
+
+#print(word_dict_search(fin, 'zamindars'))   #[Finished in 0.1s]
+  
+
+def list_search(file, search_word):
+    word_list = []
+    for line in file:
+        word = line.strip()
+        word_list.append(word)
+    if search_word in word_list:
+        return True
+    return False
+        
+#print(list_search(fin, 'zamindars'))    #[Finished in 0.1s]
+
+
+def inverse_with_setdefault(dic):
+    inverse = dict()
+    for key in dic:
+        value = dic[key]
+        inverse.setdefault(value, key)
+    return inverse
+
+#print(invert_dict(my_dict))   
+#print(inverse_with_setdefault(my_dict))   
+
+
+def ackermann(m, n):
+    """
+    http://en.wikipedia.org/wiki/Ackermann_function
+    """
+    if m == 0:
+        return n+1
+    if n == 0:
+        return ackermann(m-1, 1)
+    return ackermann(m-1, ackermann(m, n-1))
+
+#print(ackermann(3, 4))
+
+
+e = ['a', 'b', 'c', 'd', 'e', 'f', 'b', 'h']
+
+def has_duplicates(t):
+    #list version
+    temp = t[:]
+    temp.sort()
+    for i in range(len(temp)-1):
+        if temp[i] == temp[i+1]:
+            return True
+    return False    
+
+#print(has_duplicates(e))
+
+
+def has_duplicates_dict(t):
+    temp_dict = dict()
+    for item in t:
+        if item in temp_dict:
+            return True
+        temp_dict[item] = 1
+    return False            
+
+#print(has_duplicates_dict(e))
+
+
+def wordlist_dict(file):
+    word_keys = dict()
+    for line in file:
+        word = line.strip()
+        word_keys[word] = 0
+    return word_keys
+
+
+def rotate_pairs(word, file):
+    rotated = word[::-1].lower()
+    if word in wordlist_dict(file):
+        return word, rotated
+    return 'not found'    
+
+#print(rotate_pairs('pots', fin))      

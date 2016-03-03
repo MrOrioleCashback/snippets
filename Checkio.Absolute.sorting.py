@@ -2,7 +2,7 @@
 def checkio(numbers_array):
     result = sorted([abs(x) for x in numbers_array])
     for index, num in enumerate(result):
-        if (num * -1) in numbers_array:
+        if -num in numbers_array:
             result[index] *= -1
     return result 
     #return sorted(numbers_array, key=abs)  <-- keep key in mind. 

@@ -9,8 +9,7 @@ import simplegui, random
 CARD_SIZE, CARD_CENTER, CARD_BACK_SIZE, CARD_BACK_CENTER = (72, 96), (36, 48), (72, 96), (36, 48)
 RANKS, SUITS = ('A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K'), ('C', 'S', 'H', 'D')
 VALUES = {'A':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, 'T':10, 'J':10, 'Q':10, 'K':10}
-score = 0
-in_play = False
+score, in_play = 0, False
 
 class Card:
     def __init__(self, suit, rank):
@@ -108,10 +107,10 @@ def draw(canvas):
     canvas.draw_polygon([[600, 20], [600, 100], [780, 100], [780, 20]], 5, 'Black', 'White')
     canvas.draw_text('Blackjack', (30, 75), 40, 'Black'), canvas.draw_text('Score: %s' % score, (609, 76), 40, 'Black')
 
-card_back = simplegui.load_image("http://storage.googleapis.com/codeskulptor-assets/card_jfitz_back.png")  
 background = simplegui.load_image("https://dl.dropbox.com/s/u0kz2mgqqqe772e/tableBackground.jpg?dl=1")
+card_back = simplegui.load_image("http://storage.googleapis.com/codeskulptor-assets/card_jfitz_back.png")  
 card_images = simplegui.load_image("http://storage.googleapis.com/codeskulptor-assets/cards_jfitz.png")
-frame = simplegui.create_frame("Blackjack", 800, 640)
+frame = simplegui.create_frame("Blackjack 3: The Blackjackining!", 800, 640)
 frame.add_button("Deal", deal, 200), frame.add_button("Hit",  hit, 200), frame.add_button("Stand", stand, 200)
 frame.set_draw_handler(draw)
 frame.set_canvas_background("Green")

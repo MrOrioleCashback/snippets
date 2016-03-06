@@ -55,16 +55,16 @@ class Deck:
     def __init__(self):
         self.card_deck = [Card(x, y) for x in SUITS for y in RANKS]
 
+    def __str__(self):
+        return ' '.join(map(str, self.card_deck)) 
+        
     def shuffle(self):
         random.shuffle(self.card_deck)
 
     def deal_card(self):
         return self.card_deck.pop()
-    
-    def __str__(self):
-        return ' '.join(map(str, self.card_deck))   
 
-def deal():        
+def deal():
     global outcome, in_play, player_hand, dealer_hand, game_deck, down_card, outcome, score, prompt
     score -= 1 if in_play else 0
     game_deck, player_hand, dealer_hand = Deck(), Hand(), Hand()
@@ -72,7 +72,7 @@ def deal():
     player_hand.add_card(game_deck.deal_card()), player_hand.add_card(game_deck.deal_card())
     dealer_hand.add_card(game_deck.deal_card())
     outcome, prompt, in_play, down_card = 'Hit or Stand?', '', True, True
-    
+
 def hit():
     global in_play, outcome, score, prompt
     if player_hand.get_value() <= 21 and in_play:
@@ -80,7 +80,7 @@ def hit():
         if player_hand.get_value() > 21:
             outcome, prompt, in_play = 'You busted!', 'New Deal?', False
             score -= 1
-    
+
 def stand():
     global in_play, down_card, outcome, score, prompt
     if in_play:
@@ -93,7 +93,7 @@ def stand():
         else:
             outcome, prompt, in_play =  'You lose!', 'New Deal?', False
             score -= 1
- 
+
 def draw(canvas):
     global player_hand, down_card, outcome, score, prompt
     canvas.draw_image(background,(1136/2, 640/2), (1136, 640), (800/2, 640/2), (800, 640))

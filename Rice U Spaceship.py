@@ -85,6 +85,12 @@ class Ship:
         shot_vector = math.atan2(shot_vel[1], shot_vel[0])
         a_missile = Sprite(shot_nose_pos, shot_vel, shot_vector, 0, missile_image, missile_info, missile_sound)
     
+    def ship_angle_vel(self, x):
+        my_ship.angle_vel = x
+
+    def ship_thrust(self, x):
+        my_ship.thrust = x
+    
 # Sprite class
 class Sprite:
     def __init__(self, pos, vel, ang, ang_vel, image, info, sound = None):
@@ -141,29 +147,21 @@ def rock_spawner():
     rand_rock_vel = [random.random() * random.choice([1, -1]), random.random() * random.choice([1, -1])]
     a_rock = Sprite(rand_rock_pos, rand_rock_vel, 0, random.random()/10, asteroid_image, asteroid_info)
 
-#controls    
-def ship_angle_vel(x):
-    my_ship.angle_vel = x
-
-def ship_thrust(x):
-    my_ship.thrust = x
-    
-def ship_shoot(key_down):
-    if key_down:
-        my_ship.shooty()
-
-INPUTS = {'left': (ship_angle_vel, -.08, 0), 'right': (ship_angle_vel, .08, 0), 
-          'up': (ship_thrust, True, False), 'space': (ship_shoot, True, False)}
+#controls
+INPUTS = {'left': (lambda: my_ship.ship_angle_vel(-.08), lambda: my_ship.ship_angle_vel(0)), 
+          'right': (lambda: my_ship.ship_angle_vel(.08), lambda: my_ship.ship_angle_vel(0)), 
+          'up': (lambda: my_ship.ship_thrust(True), lambda: my_ship.ship_thrust(False)), 
+          'space': (lambda: my_ship.shooty(), lambda: None)}
 
 def keydown(key):
     for i in INPUTS:
         if key == simplegui.KEY_MAP[i]:
-            INPUTS[i][0](INPUTS[i][1])
+            INPUTS[i][0]()
 
 def keyup(key):
     for i in INPUTS:
         if key == simplegui.KEY_MAP[i]:
-            INPUTS[i][0](INPUTS[i][2])
+            INPUTS[i][1]()
 
 # art assets created by Kim Lathrop, may be freely re-used in non-commercial projects, please credit Kim
 

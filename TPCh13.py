@@ -82,7 +82,7 @@ def top_10_words(book, num=10):
 #top_10_words(emma)
 
 """ 
-#sep='<slash>t'*2 tells python to use two tab seperators rather than a space like so:
+#sep='\t'*2 tells python to use two tab seperators rather than a space like so:
 
 the top 10 most common words are:
 to		5242

@@ -8,20 +8,21 @@ import simplegui, random, math
 
 SCREEN = (800, 600)
 started = False
-EXPLOSION_CENTER = [64, 64]
-EXPLOSION_SIZE = [128, 128]
-EXPLOSION_DIM = 24
-count = 0
 
 def new_game():
-    global rock_group, missile_group, explosion_group, my_ship, score, lives, time, soundtrack
+    global rock_group, missile_group, explosion_group, death_group, life_group, my_ship, score, lives, time, soundtrack, count, multiplier, high
     my_ship = Ship([SCREEN[0] / 2, SCREEN[1] / 2], [0, 0], 0, ship_image, ship_info)
     rock_group = set([])
     missile_group = set([])
     explosion_group = set([])
+    death_group = set([])
+    life_group = set([])
     score = 0
     lives = 3
     time = 0
+    count = 0
+    multiplier = 1
+    high = 0
     
 class ImageInfo:
     def __init__(self, center, size, radius = 0, lifespan = None, animated = False, ani_center = None, ani_size = None, ani_dim = None):
@@ -79,7 +80,6 @@ def group_group_collide(group1, group2):
                 group1.remove(item)
                 return True
             
-# Ship class
 class Ship:
     def __init__(self, pos, vel, angle, image, info):
         self.pos = [pos[0],pos[1]]
@@ -131,7 +131,6 @@ class Ship:
     def ship_thrust(self, x):
         my_ship.thrust = x
     
-# Sprite class
 class Sprite:
     def __init__(self, pos, vel, ang, ang_vel, image, info, sound = None):
         self.pos = [pos[0],pos[1]]
@@ -174,10 +173,13 @@ class Sprite:
         return False if self.age < self.lifespan else True
 
     def collide(self, other_object):
-        return dist(self.pos, other_object.pos) <= (self.radius + other_object.radius)          
+        return dist(self.pos, other_object.pos) <= (self.radius + other_object.radius)   
+    
+    def collide_radius(self, other_object):
+        return dist(self.pos, other_object.pos) <= (self.radius + other_object.radius * 7)    
 
 def draw(canvas):
-    global time, lives, score, started
+    global time, lives, score, started, multiplier, high
     # animiate background
     time += 1
     wtime = (time / 4) % SCREEN[0]
@@ -194,14 +196,29 @@ def draw(canvas):
     
     #collision results
     if group_collide(rock_group, my_ship):
+        multiplier = 1
         lives -= 1
+        for rock in rock_group: #clear area around ship after death
+            if rock.collide_radius(my_ship):
+                rock_group.remove(rock)
+        death_group.add(Sprite(my_ship.get_position(), (0,0), 0, 0, explosion_self_image, explosion_self_info, explosion_sound))
         if lives == 0:
             started = False
             for item in rock_group:
                 rock_group.remove(item)
         
     if group_group_collide(missile_group, rock_group):
-        score += 100        
+        score += 100 * multiplier
+        if (score // 100000) > high:
+            high = score // 100000
+            rand_spwn_pos = [SCREEN[0] * random.random(), SCREEN[1] * random.random()]        
+            rand_spwn_vel = [(random.random() + (multiplier*.1)) * random.choice([1, -1]), (random.random()+ (multiplier*.1)) * random.choice([1, -1])]            
+            life_group.add(Sprite(rand_spwn_pos, rand_spwn_vel, 0, random.random()/10, mini_ship_image, mini_ship_info))
+        multiplier += .1
+        
+    if group_collide(life_group, my_ship):
+        lives += 1
+    
 
     # update/draw ship and sprites
     my_ship.draw(canvas)
@@ -209,25 +226,28 @@ def draw(canvas):
     process_sprite_group(explosion_group)
     process_sprite_group(missile_group)    
     process_sprite_group(rock_group)
+    process_sprite_group(death_group)
+    process_sprite_group(life_group)
     
     #draw score and lives 
     canvas.draw_text("Lives", [50, 50], 22, "Silver", "monospace")
     canvas.draw_text("Score", [680, 50], 22, "Silver", "monospace")
+    canvas.draw_text("Multiplier", [330, 50], 22, "Silver", "monospace")
     canvas.draw_text(str(lives), [50, 80], 22, "Silver", "monospace")
-    canvas.draw_text(str(score), [680, 80], 22, "Silver", "monospace")
+    canvas.draw_text(str(int(score)), [680, 80], 22, "Silver", "monospace")
+    canvas.draw_text(str(multiplier), [380, 80], 22, "Silver", "monospace")
     
-    if not started:
+    if not started: #draw splash
         canvas.draw_image(splash_image, splash_info.get_center(), 
                           splash_info.get_size(), [SCREEN[0] / 2, SCREEN[1] / 2], 
                           splash_info.get_size())    
             
-# timer handler that spawns a rock    
 def rock_spawner():
     global rock_group
-    if len(rock_group) < 12 and started:
+    if len(rock_group) < 12 + multiplier and started:
         rand_rock_pos = [SCREEN[0] * random.random(), SCREEN[1] * random.random()]
-        if dist(rand_rock_pos, my_ship.get_position()) > 80:
-            rand_rock_vel = [random.random() * random.choice([1, -1]), random.random() * random.choice([1, -1])]
+        if dist(rand_rock_pos, my_ship.get_position()) > 90 + multiplier * 3:
+            rand_rock_vel = [(random.random() + (multiplier*.1)) * random.choice([1, -1]), (random.random()+ (multiplier*.1)) * random.choice([1, -1])]
             rock_group.add(Sprite(rand_rock_pos, rand_rock_vel, 0, random.random()/10, asteroid_image, asteroid_info))
 
 #controls
@@ -257,6 +277,11 @@ def click(pos):
         started = True
         soundtrack.rewind(), soundtrack.play()
         new_game()
+
+def reset():
+    global started
+    started = False
+    new_game()
         
 # art assets created by Kim Lathrop, may be freely re-used in non-commercial projects, please credit Kim
 
@@ -277,6 +302,10 @@ splash_image = simplegui.load_image("http://commondatastorage.googleapis.com/cod
 ship_info = ImageInfo([45, 45], [90, 90], 35)
 ship_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/double_ship.png")
 
+mini_ship_info = ImageInfo([45, 45], [25, 25], 35, 600)
+mini_ship_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/double_ship.png")
+
+
 #pulse 1 & 2 / missile image - shot1.png, shot2.png, shot3.png
 pulse_info = ImageInfo([5,5], [10, 10], 3, 50) #<= shot1.png, shot2.png
 pulse_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/shot2.png")
@@ -291,6 +320,9 @@ asteroid_image = simplegui.load_image("http://commondatastorage.googleapis.com/c
 explosion_info = ImageInfo([64, 64], [128, 128], 17, 24, True, [64, 64], [128, 128], 24)
 explosion_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/explosion_orange.png")
 
+explosion_self_info = ImageInfo([64, 64], [128, 128], 17, 24, True, [64, 64], [128, 128], 24)
+explosion_self_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/explosion_alpha.png")
+
 # sound assets purchased from sounddogs.com, please do not redistribute
 soundtrack = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/soundtrack.mp3")
 soundtrack.set_volume(.4)
@@ -299,11 +331,7 @@ missile_sound.set_volume(.2)
 ship_thrust_sound = simplegui.load_sound("http://giladayalonvegan.vkav.org/Python/thrust.mp3") 
 ship_thrust_sound.set_volume(.6)
 explosion_sound = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/explosion.mp3")
-explosion_sound.set_volume(.4)
-
-# alternative upbeat soundtrack by composer and former IIPP student Emiel Stopler
-# please do not redistribute without permission from Emiel at http://www.filmcomposer.nl
-#soundtrack = simplegui.load_sound("https://storage.googleapis.com/codeskulptor-assets/ricerocks_theme.mp3")
+explosion_sound.set_volume(.3)
 
 # initialize frame
 frame = simplegui.create_frame("Asteroids 4: Extreme Fatal Impact of Fury", SCREEN[0], SCREEN[1])
@@ -314,8 +342,41 @@ frame.set_keydown_handler(keydown)
 frame.set_keyup_handler(keyup)
 frame.set_mouseclick_handler(click)
 timer = simplegui.create_timer(1000.0, rock_spawner)
+frame.add_button("New Game", reset, 200)
+frame.add_label('')
+frame.add_label('* Asteroids are worth 100 points.')
+frame.add_label('')
+frame.add_label('* Multiplier increases for each asteroid destroyed.')
+frame.add_label('')
+frame.add_label('* Asteroid point values are multiplied by the Multiplier.')
+frame.add_label('')
+frame.add_label('* Asteroids increase in numbers and speed with Multiplier.')
+frame.add_label('')
+frame.add_label('* Asteroids spawn further away from player ship as the difficulty increases.')
+frame.add_label('')
+frame.add_label("* Extra life spawns every 100,000 points & you'll have 10 seconds to grab it.")
+frame.add_label('')
+frame.add_label('Good Luck!')
 
-# get things rolling
+#start
 timer.start()
 frame.start()
 new_game()
+
+#functions below stop music when closing window
+def music_stop():
+    soundtrack.pause()
+    
+def set_unload_handler(frame, handler, period = 1000):
+    def unload_check():
+        #credit: Michael Cimino for set_unload_handler
+        try: 
+            textwidth = frame.get_canvas_textwidth("t",12)
+        except:
+            textwidth = 0
+        if textwidth==0:
+            unloaded_check_timer.stop()
+            handler()
+    unloaded_check_timer = simplegui.create_timer(period, unload_check)
+    unloaded_check_timer.start()
+set_unload_handler(frame, music_stop)

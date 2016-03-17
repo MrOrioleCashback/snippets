@@ -1,3 +1,9 @@
+"""
+3/16/16
+Coursera, An Introduction to Interactive Programming in Python (Part 1), Rice University
+Mini-project #8 - RiceRocks (Asteroids)
+"""
+
 import simplegui, random, math 
 
 # globals for user interface
@@ -5,7 +11,17 @@ SCREEN = (800, 600)
 score = 0
 lives = 3
 time = 0
+started = False
 
+def new_game():
+    global rock_group, missile_group, my_ship, score, lives, time, soundtrack
+    my_ship = Ship([SCREEN[0] / 2, SCREEN[1] / 2], [0, 0], 0, ship_image, ship_info)
+    rock_group = set([])
+    missile_group = set([])
+    score = 0
+    lives = 3
+    time = 0
+    
 class ImageInfo:
     def __init__(self, center, size, radius = 0, lifespan = None, animated = False):
         self.center = center
@@ -40,9 +56,18 @@ def dist(p,q):
     return math.sqrt((p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2)
 
 def group_collide(group, other_object):
-    for item in group:
+    global lives
+    for item in set(group):
         if item.collide(other_object):
-            print 'remove item from group'
+            group.remove(item)
+            return True
+        
+def group_group_collide(group1, group2):
+        for item in group1:
+            if group_collide(group2, item):
+                group1.remove(item)
+                return True
+        
             
 # Ship class
 class Ship:
@@ -88,7 +113,7 @@ class Ship:
         shot_nose_pos = [self.pos[0] + (self.radius * nose[0]), self.pos[1] + (self.radius * nose[1])] 
         shot_vel = [(nose[0] * 10) + self.vel[0], (nose[1] * 10) + self.vel[1]]
         shot_vector = math.atan2(shot_vel[1], shot_vel[0])
-        a_missile = Sprite(shot_nose_pos, shot_vel, shot_vector, 0, missile_image, missile_info, missile_sound)
+        missile_group.add(Sprite(shot_nose_pos, shot_vel, shot_vector, 0, missile_image, missile_info, missile_sound))
     
     def ship_angle_vel(self, x):
         my_ship.angle_vel = x
@@ -126,12 +151,17 @@ class Sprite:
         self.angle += self.angle_vel
         for x in range(2): #keep in x, y range of screen
             self.pos[x] = (self.pos[x] + self.vel[x]) % SCREEN[x]
+        if self.age < self.lifespan:
+                self.age += 1
+                return False
+        else:
+            return True
 
     def collide(self, other_object):
         return dist(self.pos, other_object.pos) <= (self.radius + other_object.radius)          
 
 def draw(canvas):
-    global time
+    global time, lives, score, started
     # animiate background
     time += 1
     wtime = (time / 4) % SCREEN[0]
@@ -143,29 +173,45 @@ def draw(canvas):
     def process_sprite_group(group):
         for item in group:
             item.draw(canvas)
-            item.update()
+            if item.update():
+                group.remove(item)
     
-    group_collide(rock_group, my_ship)        
+    if group_collide(rock_group, my_ship):
+        lives -= 1
+        if lives == 0:
+            started = False
+            for item in rock_group:
+                rock_group.remove(item)
+            
+        
+    if group_group_collide(missile_group, rock_group):
+        score += 100        
 
     # update/draw ship and sprites
     my_ship.draw(canvas)
-    a_missile.draw(canvas)    
     my_ship.update()
+    process_sprite_group(missile_group)    
     process_sprite_group(rock_group)
-    a_missile.update()
     
     #draw score and lives 
-    canvas.draw_text(str(score), (SCREEN[0] - 50, 50), 50, '#ffff00')
-    canvas.draw_text(str(lives), (50, 50), 50, '#ffff00')
-   
+    canvas.draw_text("Lives", [50, 50], 22, "Silver", "monospace")
+    canvas.draw_text("Score", [680, 50], 22, "Silver", "monospace")
+    canvas.draw_text(str(lives), [50, 80], 22, "Silver", "monospace")
+    canvas.draw_text(str(score), [680, 80], 22, "Silver", "monospace")
     
+    if not started:
+        canvas.draw_image(splash_image, splash_info.get_center(), 
+                          splash_info.get_size(), [SCREEN[0] / 2, SCREEN[1] / 2], 
+                          splash_info.get_size())    
+        
 # timer handler that spawns a rock    
 def rock_spawner():
     global rock_group
-    if len(rock_group) < 12:
+    if len(rock_group) < 12 and started:
         rand_rock_pos = [SCREEN[0] * random.random(), SCREEN[1] * random.random()]
-        rand_rock_vel = [random.random() * random.choice([1, -1]), random.random() * random.choice([1, -1])]
-        rock_group.add(Sprite(rand_rock_pos, rand_rock_vel, 0, random.random()/10, asteroid_image, asteroid_info))
+        if dist(rand_rock_pos, my_ship.get_position()) > 80:
+            rand_rock_vel = [random.random() * random.choice([1, -1]), random.random() * random.choice([1, -1])]
+            rock_group.add(Sprite(rand_rock_pos, rand_rock_vel, 0, random.random()/10, asteroid_image, asteroid_info))
 
 #controls
 INPUTS = {'left': (lambda: my_ship.ship_angle_vel(-.08), lambda: my_ship.ship_angle_vel(0)), 
@@ -184,6 +230,17 @@ def keyup(key):
         if key == simplegui.KEY_MAP[i]:
             INPUTS[i][1]()
 
+def click(pos):
+    global started
+    center = [SCREEN[0] / 2, SCREEN[1] / 2]
+    size = splash_info.get_size()
+    inwidth = (center[0] - size[0] / 2) < pos[0] < (center[0] + size[0] / 2)
+    inheight = (center[1] - size[1] / 2) < pos[1] < (center[1] + size[1] / 2)
+    if (not started) and inwidth and inheight:
+        started = True
+        soundtrack.rewind(), soundtrack.play()
+        new_game()
+        
 # art assets created by Kim Lathrop, may be freely re-used in non-commercial projects, please credit Kim
 
 # debris images - debris1_brown.png, debris2_brown.png, debris3_brown.png, debris4_brown.png
@@ -230,11 +287,6 @@ explosion_sound = simplegui.load_sound("http://commondatastorage.googleapis.com/
 # please do not redistribute without permission from Emiel at http://www.filmcomposer.nl
 #soundtrack = simplegui.load_sound("https://storage.googleapis.com/codeskulptor-assets/ricerocks_theme.mp3")
 
-# initialize ship and two sprites
-my_ship = Ship([SCREEN[0] / 2, SCREEN[1] / 2], [0, 0], 0, ship_image, ship_info)
-rock_group = set([])
-a_missile = Sprite([-1, -1], [0,0], 0, 0, missile_image, missile_info)
-
 # initialize frame
 frame = simplegui.create_frame("Asteroids 4: Extreme Fatal Impact of Fury", SCREEN[0], SCREEN[1])
 
@@ -242,8 +294,10 @@ frame = simplegui.create_frame("Asteroids 4: Extreme Fatal Impact of Fury", SCRE
 frame.set_draw_handler(draw)
 frame.set_keydown_handler(keydown)
 frame.set_keyup_handler(keyup)
+frame.set_mouseclick_handler(click)
 timer = simplegui.create_timer(1000.0, rock_spawner)
 
 # get things rolling
 timer.start()
 frame.start()
+new_game()

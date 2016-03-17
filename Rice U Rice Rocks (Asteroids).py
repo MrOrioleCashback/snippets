@@ -75,16 +75,17 @@ def group_collide(group, other_object):
             return True
         
 def group_group_collide(group1, group2):
-        for item in group1:
-            if group_collide(group2, item):
-                group1.remove(item)
-                return True
+    for item in group1:
+        if group_collide(group2, item):
+            group1.remove(item)
+            return True
             
 class Ship:
     def __init__(self, pos, vel, angle, image, info):
         self.pos = [pos[0],pos[1]]
         self.vel = [vel[0],vel[1]]
         self.thrust = False
+        self.rthrust = False
         self.angle = angle
         self.angle_vel = 0
         self.image = image
@@ -104,7 +105,9 @@ class Ship:
         if self.thrust:
             thrust_image_center = [self.image_center[0] + 90, self.image_center[1]]
             canvas.draw_image(ship_image, thrust_image_center, self.image_size, self.pos, self.image_size, self.angle)
-            
+        if self.rthrust:
+            canvas.draw_image(reverse_ship, [self.image_center[0], self.image_center[1]], self.image_size, self.pos, self.image_size, self.angle)
+        
     def update(self):
         self.angle += self.angle_vel
         for x in range(2): #keep in x, y range of screen
@@ -114,6 +117,10 @@ class Ship:
             for x in range(2):  #apply 25% thrust to x, y
                 self.vel[x] += .25* angle_to_vector(self.angle)[x]
             ship_thrust_sound.play()
+        elif self.rthrust:
+            for x in range(2):  #apply 10% reverse thrust to x, y
+                self.vel[x] -= .10* angle_to_vector(self.angle)[x]
+            ship_thrust_sound.play()    
         else:
             ship_thrust_sound.pause(), ship_thrust_sound.rewind()
 
@@ -130,6 +137,9 @@ class Ship:
 
     def ship_thrust(self, x):
         my_ship.thrust = x
+        
+    def ship_rthrust(self, x):
+        my_ship.rthrust = x        
     
 class Sprite:
     def __init__(self, pos, vel, ang, ang_vel, image, info, sound = None):
@@ -204,12 +214,12 @@ def draw(canvas):
         death_group.add(Sprite(my_ship.get_position(), (0,0), 0, 0, explosion_self_image, explosion_self_info, explosion_sound))
         if lives == 0:
             started = False
-            for item in rock_group:
+            for item in rock_group: #kill rocks on final death
                 rock_group.remove(item)
         
     if group_group_collide(missile_group, rock_group):
         score += 100 * multiplier
-        if (score // 100000) > high:
+        if (score // 100000) > high: #extra life
             high = score // 100000
             rand_spwn_pos = [SCREEN[0] * random.random(), SCREEN[1] * random.random()]        
             rand_spwn_vel = [(random.random() + (multiplier*.1)) * random.choice([1, -1]), (random.random()+ (multiplier*.1)) * random.choice([1, -1])]            
@@ -219,10 +229,10 @@ def draw(canvas):
     if group_collide(life_group, my_ship):
         lives += 1
     
-
     # update/draw ship and sprites
     my_ship.draw(canvas)
     my_ship.update()
+    
     process_sprite_group(explosion_group)
     process_sprite_group(missile_group)    
     process_sprite_group(rock_group)
@@ -244,17 +254,18 @@ def draw(canvas):
             
 def rock_spawner():
     global rock_group
-    if len(rock_group) < 12 + multiplier and started:
+    if len(rock_group) < 12 + multiplier and started: #higher multiplier = more rocks
         rand_rock_pos = [SCREEN[0] * random.random(), SCREEN[1] * random.random()]
-        if dist(rand_rock_pos, my_ship.get_position()) > 90 + multiplier * 3:
+        if dist(rand_rock_pos, my_ship.get_position()) > 90 + multiplier * 3:  #higher multiplier = faster rocks and larger spawn radius
             rand_rock_vel = [(random.random() + (multiplier*.1)) * random.choice([1, -1]), (random.random()+ (multiplier*.1)) * random.choice([1, -1])]
             rock_group.add(Sprite(rand_rock_pos, rand_rock_vel, 0, random.random()/10, asteroid_image, asteroid_info))
 
 #controls
-INPUTS = {'left': (lambda: my_ship.ship_angle_vel(-.08), lambda: my_ship.ship_angle_vel(0)), 
-          'right': (lambda: my_ship.ship_angle_vel(.08), lambda: my_ship.ship_angle_vel(0)), 
+INPUTS = {'left': (lambda: my_ship.ship_angle_vel(-.09), lambda: my_ship.ship_angle_vel(0)), 
+          'right': (lambda: my_ship.ship_angle_vel(.09), lambda: my_ship.ship_angle_vel(0)), 
           'up': (lambda: my_ship.ship_thrust(True), lambda: my_ship.ship_thrust(False)), 
-          'space': (lambda: my_ship.shooty(), lambda: None)
+          'space': (lambda: my_ship.shooty(), lambda: None),
+          'down': (lambda: my_ship.ship_rthrust(True), lambda: my_ship.ship_rthrust(False))
          }
 
 def keydown(key):
@@ -284,39 +295,28 @@ def reset():
     new_game()
         
 # art assets created by Kim Lathrop, may be freely re-used in non-commercial projects, please credit Kim
-
-# debris images - debris1_brown.png, debris2_brown.png, debris3_brown.png, debris4_brown.png
-#                 debris1_blue.png, debris2_blue.png, debris3_blue.png, debris4_blue.png, debris_blend.png
 debris_info = ImageInfo([320, 240], [640, 480])
 debris_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/debris2_brown.png")
 
-# nebula images - nebula_brown.png, nebula_blue.png, nebula_blue.f2014.png
 nebula_info = ImageInfo([400, 300], [800, 600])
 nebula_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/nebula_brown.png")
 
-# splash image
 splash_info = ImageInfo([200, 150], [400, 300])
 splash_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/splash.png")
 
-# ship image
 ship_info = ImageInfo([45, 45], [90, 90], 35)
 ship_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/double_ship.png")
-
+reverse_ship_info = ImageInfo([45, 45], [90, 90], 35)
+reverse_ship = simplegui.load_image("https://dl.dropbox.com/s/yksjfql6181qa6a/reverse.png?dl=1")
 mini_ship_info = ImageInfo([45, 45], [25, 25], 35, 600)
 mini_ship_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/double_ship.png")
 
-
-#pulse 1 & 2 / missile image - shot1.png, shot2.png, shot3.png
-pulse_info = ImageInfo([5,5], [10, 10], 3, 50) #<= shot1.png, shot2.png
-pulse_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/shot2.png")
 missile_info = ImageInfo([10,10], [20, 20], 3, 50) #<= shot3.png
 missile_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/shot3.png")
 
-# asteroid images - asteroid_blue.png, asteroid_brown.png, asteroid_blend.png
 asteroid_info = ImageInfo([45, 45], [90, 90], 40)
 asteroid_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/asteroid_brown.png")
 
-# animated explosion - explosion_orange.png, explosion_blue.png, explosion_blue2.png, explosion_alpha.png
 explosion_info = ImageInfo([64, 64], [128, 128], 17, 24, True, [64, 64], [128, 128], 24)
 explosion_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/explosion_orange.png")
 
@@ -333,16 +333,16 @@ ship_thrust_sound.set_volume(.6)
 explosion_sound = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/explosion.mp3")
 explosion_sound.set_volume(.3)
 
-# initialize frame
 frame = simplegui.create_frame("Asteroids 4: Extreme Fatal Impact of Fury", SCREEN[0], SCREEN[1])
-
-# register handlers
 frame.set_draw_handler(draw)
 frame.set_keydown_handler(keydown)
 frame.set_keyup_handler(keyup)
 frame.set_mouseclick_handler(click)
 timer = simplegui.create_timer(1000.0, rock_spawner)
 frame.add_button("New Game", reset, 200)
+
+frame.add_label('')
+frame.add_label('Left and Right arrow keys to turn, up to thrust, down to reverse, and space to shoot')
 frame.add_label('')
 frame.add_label('* Asteroids are worth 100 points.')
 frame.add_label('')
@@ -350,7 +350,7 @@ frame.add_label('* Multiplier increases for each asteroid destroyed.')
 frame.add_label('')
 frame.add_label('* Asteroid point values are multiplied by the Multiplier.')
 frame.add_label('')
-frame.add_label('* Asteroids increase in numbers and speed with Multiplier.')
+frame.add_label('* Asteroids increase in number and speed with Multiplier.')
 frame.add_label('')
 frame.add_label('* Asteroids spawn further away from player ship as the difficulty increases.')
 frame.add_label('')
@@ -358,12 +358,11 @@ frame.add_label("* Extra life spawns every 100,000 points & you'll have 10 secon
 frame.add_label('')
 frame.add_label('Good Luck!')
 
-#start
 timer.start()
 frame.start()
 new_game()
 
-#functions below stop music when closing window
+#functions below stop music upon closing window
 def music_stop():
     soundtrack.pause()
     

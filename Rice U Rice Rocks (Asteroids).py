@@ -10,19 +10,11 @@ SCREEN = (800, 600)
 started = False
 
 def new_game():
-    global rock_group, missile_group, explosion_group, death_group, life_group, my_ship, score, lives, time, soundtrack, count, multiplier, high
+    global rock_group, missile_group, explosion_group, death_group, life_group
+    global my_ship, score, lives, time, soundtrack, count, multiplier, high, started
     my_ship = Ship([SCREEN[0] / 2, SCREEN[1] / 2], [0, 0], 0, ship_image, ship_info)
-    rock_group = set([])
-    missile_group = set([])
-    explosion_group = set([])
-    death_group = set([])
-    life_group = set([])
-    score = 0
-    lives = 3
-    time = 0
-    count = 0
-    multiplier = 1
-    high = 0
+    rock_group, missile_group, explosion_group, death_group,life_group = set([]), set([]), set([]), set([]), set([])
+    lives, score, time, count, multiplier, high = 3, 0, 0, 0, 1, 0
     
 class ImageInfo:
     def __init__(self, center, size, radius = 0, lifespan = None, animated = False, ani_center = None, ani_size = None, ani_dim = None):
@@ -129,7 +121,7 @@ class Ship:
         nose = angle_to_vector(self.angle)
         shot_nose_pos = [self.pos[0] + (self.radius * nose[0]), self.pos[1] + (self.radius * nose[1])] 
         shot_vel = [(nose[0] * 10) + self.vel[0], (nose[1] * 10) + self.vel[1]]
-        shot_vector = math.atan2(shot_vel[1], shot_vel[0])
+        shot_vector = math.atan2(shot_vel[1], shot_vel[0]) #aim missiles toward forward vector
         missile_group.add(Sprite(shot_nose_pos, shot_vel, shot_vector, 0, missile_image, missile_info, missile_sound))
     
     def ship_angle_vel(self, x):
@@ -185,7 +177,7 @@ class Sprite:
     def collide(self, other_object):
         return dist(self.pos, other_object.pos) <= (self.radius + other_object.radius)   
     
-    def collide_radius(self, other_object):
+    def too_close_to(self, other_object):
         return dist(self.pos, other_object.pos) <= (self.radius + other_object.radius * 7)    
 
 def draw(canvas):
@@ -209,7 +201,7 @@ def draw(canvas):
         multiplier = 1
         lives -= 1
         for rock in rock_group: #clear area around ship after death
-            if rock.collide_radius(my_ship):
+            if rock.too_close_to(my_ship):
                 rock_group.remove(rock)
         death_group.add(Sprite(my_ship.get_position(), (0,0), 0, 0, explosion_self_image, explosion_self_info, explosion_sound))
         if lives == 0:
@@ -219,12 +211,13 @@ def draw(canvas):
         
     if group_group_collide(missile_group, rock_group):
         score += 100 * multiplier
+        multiplier += .1        
         if (score // 100000) > high: #extra life
-            high = score // 100000
+            high = score // 100000 #track extra lives
             rand_spwn_pos = [SCREEN[0] * random.random(), SCREEN[1] * random.random()]        
-            rand_spwn_vel = [(random.random() + (multiplier*.1)) * random.choice([1, -1]), (random.random()+ (multiplier*.1)) * random.choice([1, -1])]            
-            life_group.add(Sprite(rand_spwn_pos, rand_spwn_vel, 0, random.random()/10, mini_ship_image, mini_ship_info))
-        multiplier += .1
+            rand_spwn_vel = [(random.random() + (multiplier*.1)) * random.choice([1, -1]), (random.random()+ (multiplier*.1)) * random.choice([1, -1])]
+            life_group.add(Sprite(rand_spwn_pos, rand_spwn_vel, 0, random.random()/10, extra_life, extra_life_info))
+
         
     if group_collide(life_group, my_ship):
         lives += 1
@@ -257,7 +250,7 @@ def rock_spawner():
     if len(rock_group) < 12 + multiplier and started: #higher multiplier = more rocks
         rand_rock_pos = [SCREEN[0] * random.random(), SCREEN[1] * random.random()]
         if dist(rand_rock_pos, my_ship.get_position()) > 90 + multiplier * 3:  #higher multiplier = faster rocks and larger spawn radius
-            rand_rock_vel = [(random.random() + (multiplier*.1)) * random.choice([1, -1]), (random.random()+ (multiplier*.1)) * random.choice([1, -1])]
+            rand_rock_vel = [(random.random() + (multiplier*.1)) * random.choice([1, -1]), (random.random() + (multiplier*.1)) * random.choice([1, -1])]
             rock_group.add(Sprite(rand_rock_pos, rand_rock_vel, 0, random.random()/10, asteroid_image, asteroid_info))
 
 #controls
@@ -308,8 +301,8 @@ ship_info = ImageInfo([45, 45], [90, 90], 35)
 ship_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/double_ship.png")
 reverse_ship_info = ImageInfo([45, 45], [90, 90], 35)
 reverse_ship = simplegui.load_image("https://dl.dropbox.com/s/yksjfql6181qa6a/reverse.png?dl=1")
-mini_ship_info = ImageInfo([45, 45], [25, 25], 35, 600)
-mini_ship_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/double_ship.png")
+extra_life_info = ImageInfo([45, 45], [25, 25], 35, 600)
+extra_life = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/double_ship.png")
 
 missile_info = ImageInfo([10,10], [20, 20], 3, 50) #<= shot3.png
 missile_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/shot3.png")
@@ -329,7 +322,7 @@ soundtrack.set_volume(.4)
 missile_sound = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/missile.mp3")
 missile_sound.set_volume(.2)
 ship_thrust_sound = simplegui.load_sound("http://giladayalonvegan.vkav.org/Python/thrust.mp3") 
-ship_thrust_sound.set_volume(.6)
+ship_thrust_sound.set_volume(.8)
 explosion_sound = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/explosion.mp3")
 explosion_sound.set_volume(.3)
 
@@ -341,22 +334,14 @@ frame.set_mouseclick_handler(click)
 timer = simplegui.create_timer(1000.0, rock_spawner)
 frame.add_button("New Game", reset, 200)
 
-frame.add_label('')
-frame.add_label('Left and Right arrow keys to turn, up to thrust, down to reverse, and space to shoot')
-frame.add_label('')
-frame.add_label('* Asteroids are worth 100 points.')
-frame.add_label('')
-frame.add_label('* Multiplier increases for each asteroid destroyed.')
-frame.add_label('')
-frame.add_label('* Asteroid point values are multiplied by the Multiplier.')
-frame.add_label('')
-frame.add_label('* Asteroids increase in number and speed with Multiplier.')
-frame.add_label('')
-frame.add_label('* Asteroids spawn further away from player ship as the difficulty increases.')
-frame.add_label('')
-frame.add_label("* Extra life spawns every 100,000 points & you'll have 10 seconds to grab it.")
-frame.add_label('')
-frame.add_label('Good Luck!')
+frame.add_label(''), frame.add_label('Left and Right arrow keys to turn, up to thrust, down to reverse, and space to shoot')
+frame.add_label(''), frame.add_label('* Asteroids are worth 100 points.')
+frame.add_label(''), frame.add_label('* Multiplier increases for each asteroid destroyed.')
+frame.add_label(''), frame.add_label('* Asteroid point values are multiplied by the Multiplier.')
+frame.add_label(''), frame.add_label('* Asteroids increase in number and speed with Multiplier.')
+frame.add_label(''), frame.add_label('* Asteroids spawn further away from player ship as the difficulty increases.')
+frame.add_label(''), frame.add_label("* Extra life spawns every 100,000 points & you'll have 10 seconds to grab it.")
+frame.add_label(''), frame.add_label('Good Luck!')
 
 timer.start()
 frame.start()

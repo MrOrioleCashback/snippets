@@ -62,7 +62,12 @@ def group_collide(group, other_object):
     global lives, explosion_group
     for item in set(group):
         if item.collide(other_object):
-            explosion_group.add(Sprite(item.get_position(), (0,0), 0, 0, explosion_image, explosion_info, explosion_sound))
+            explosion_group.add(Sprite(item.get_position(), (0,0), 0, 0, explosion_image, explosion_info, explosion_sound))                            
+            if item.get_split():
+                rand_rock_vel = [(random.random() + (multiplier*.1)) * random.choice([1, -1]), (random.random() + (multiplier*.1)) * random.choice([1, -1])]
+                rock_group.add(Sprite(item.get_position(), rand_rock_vel, 0, random.random()/10, mini_asteroid_image, mini_asteroid_info, None, False))
+                rand_rock_vel = [(random.random() + (multiplier*.1)) * random.choice([1, -1]), (random.random() + (multiplier*.1)) * random.choice([1, -1])]
+                rock_group.add(Sprite(item.get_position(), rand_rock_vel, 0, random.random()/10, mini_asteroid_image, mini_asteroid_info, None, False))
             group.remove(item)
             return True
         
@@ -134,7 +139,7 @@ class Ship:
         my_ship.rthrust = x        
     
 class Sprite:
-    def __init__(self, pos, vel, ang, ang_vel, image, info, sound = None):
+    def __init__(self, pos, vel, ang, ang_vel, image, info, sound = None, split = False):
         self.pos = [pos[0],pos[1]]
         self.vel = [vel[0],vel[1]]
         self.angle = ang
@@ -149,6 +154,7 @@ class Sprite:
         self.ani_size = info.get_ani_size()
         self.ani_dim = info.get_ani_dim()
         self.age = 0
+        self.split = split
         if sound:
             sound.rewind(), sound.play()
 
@@ -179,6 +185,9 @@ class Sprite:
     
     def too_close_to(self, other_object):
         return dist(self.pos, other_object.pos) <= (self.radius + other_object.radius * 7)    
+    
+    def get_split(self):
+        return self.split
 
 def draw(canvas):
     global time, lives, score, started, multiplier, high
@@ -247,11 +256,11 @@ def draw(canvas):
             
 def rock_spawner():
     global rock_group
-    if len(rock_group) < 12 + multiplier and started: #higher multiplier = more rocks
+    if len(rock_group) < 12 + (multiplier/2) and started: #higher multiplier = more rocks
         rand_rock_pos = [SCREEN[0] * random.random(), SCREEN[1] * random.random()]
         if dist(rand_rock_pos, my_ship.get_position()) > 90 + multiplier * 3:  #higher multiplier = faster rocks and larger spawn radius
             rand_rock_vel = [(random.random() + (multiplier*.1)) * random.choice([1, -1]), (random.random() + (multiplier*.1)) * random.choice([1, -1])]
-            rock_group.add(Sprite(rand_rock_pos, rand_rock_vel, 0, random.random()/10, asteroid_image, asteroid_info))
+            rock_group.add(Sprite(rand_rock_pos, rand_rock_vel, 0, random.random()/10, asteroid_image, asteroid_info, None, True))
 
 #controls
 INPUTS = {'left': (lambda: my_ship.ship_angle_vel(-.09), lambda: my_ship.ship_angle_vel(0)), 
@@ -308,7 +317,9 @@ missile_info = ImageInfo([10,10], [20, 20], 3, 50) #<= shot3.png
 missile_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/shot3.png")
 
 asteroid_info = ImageInfo([45, 45], [90, 90], 40)
+mini_asteroid_info = ImageInfo([22.5, 22.5], [45, 45], 30)
 asteroid_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/asteroid_brown.png")
+mini_asteroid_image = simplegui.load_image("https://dl.dropbox.com/s/dup12xyh411fqcx/In6Oi.png?dl=1")
 
 explosion_info = ImageInfo([64, 64], [128, 128], 17, 24, True, [64, 64], [128, 128], 24)
 explosion_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/explosion_orange.png")

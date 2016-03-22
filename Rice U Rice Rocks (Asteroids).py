@@ -226,7 +226,6 @@ def draw(canvas):
             rand_spwn_pos = [SCREEN[0] * random.random(), SCREEN[1] * random.random()]        
             rand_spwn_vel = [(random.random() + (multiplier*.1)) * random.choice([1, -1]), (random.random()+ (multiplier*.1)) * random.choice([1, -1])]
             life_group.add(Sprite(rand_spwn_pos, rand_spwn_vel, 0, random.random()/10, extra_life, extra_life_info))
-
         
     if group_collide(life_group, my_ship):
         lives += 1
@@ -256,9 +255,9 @@ def draw(canvas):
             
 def rock_spawner():
     global rock_group
-    if len(rock_group) < 12 + (multiplier/2) and started: #higher multiplier = more rocks
+    if len(rock_group) < 10 + (multiplier/2) and started: #higher multiplier = more rocks
         rand_rock_pos = [SCREEN[0] * random.random(), SCREEN[1] * random.random()]
-        if dist(rand_rock_pos, my_ship.get_position()) > 90 + multiplier * 3:  #higher multiplier = faster rocks and larger spawn radius
+        if dist(rand_rock_pos, my_ship.get_position()) > 100 + multiplier * 3:  #higher multiplier = faster rocks and larger spawn radius
             rand_rock_vel = [(random.random() + (multiplier*.1)) * random.choice([1, -1]), (random.random() + (multiplier*.1)) * random.choice([1, -1])]
             rock_group.add(Sprite(rand_rock_pos, rand_rock_vel, 0, random.random()/10, asteroid_image, asteroid_info, None, True))
 

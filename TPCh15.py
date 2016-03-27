@@ -169,23 +169,27 @@ print_point(bob.center) #=> (150, 100)
 def point_in_circle(circle, point):
 	return distance_between_points(circle.center, point) <= circle.radius
 
+#expect False, outside circle
 check1 = Point()
 check1.x = 20
 check1.y = 40
 
+#expect True, inside circle
 check2 = Point()
 check2.x = 100
 check2.y = 50
 
+#expect True, on the line
 check3 = Point()
 check3.x = 150
 check3.y = 25
 
+#expect False, outside circle, close to line
 check4 = Point()
 check4.x = 150
 check4.y = 24.999
 
-print(point_in_circle(bob, check1)) #=> False	✓
-print(point_in_circle(bob, check2)) #=> True	✓
+print(point_in_circle(bob, check1)) #=> False 	✓
+print(point_in_circle(bob, check2)) #=> True 	✓
 print(point_in_circle(bob, check3)) #=> True	✓
 print(point_in_circle(bob, check4)) #=> False	✓

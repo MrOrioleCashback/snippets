@@ -119,7 +119,7 @@ print(box.corner.x) #=> 10.5
 print(box2.corner.x) #=> 10.5
 
 """
-copy.copy() is a shallow copy, changes to box.corner or box.corner will effect
+copy.copy() is a shallow copy, changes to box.corner will effect
 the other box's.corner. copy provides deepcopy for this:
 """
 

@@ -2,6 +2,8 @@
 3/16/16
 Coursera, An Introduction to Interactive Programming in Python (Part 1), Rice University
 Mini-project #8 - RiceRocks (Asteroids)
+
+copy code to http://www.codeskulptor.org/
 """
 
 import simplegui, random, math 

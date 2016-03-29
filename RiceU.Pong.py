@@ -2,6 +2,8 @@
 2/20/16
 Coursera, An Introduction to Interactive Programming in Python (Part 1), Rice University
 Mini-project #4 - "Pong"
+
+copy code to http://www.codeskulptor.org/
 """
 
 import simplegui

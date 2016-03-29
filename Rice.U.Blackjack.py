@@ -2,6 +2,8 @@
 3/4/16
 Coursera, An Introduction to Interactive Programming in Python (Part 2), Rice University
 Mini-project #6 - 'Blackjack'
+
+copy code to http://www.codeskulptor.org/
 """
 
 import simplegui, random

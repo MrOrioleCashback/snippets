@@ -2,6 +2,8 @@
 2/25/16
 Coursera, An Introduction to Interactive Programming in Python (Part 2), Rice University
 Mini-project # 5 - 'Memory'
+
+copy code to http://www.codeskulptor.org/
 """
 
 import simplegui

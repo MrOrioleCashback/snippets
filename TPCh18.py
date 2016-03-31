@@ -169,3 +169,48 @@ a concept in Object Oriented Programming that states: Functions that use pointer
 or references to base classes must be able to use objects of derived classes 
 without knowing it.
 """
+
+class Deck2(Deck):
+	"""exercise 18.2"""
+	def __init__(self):
+		super(Deck2, self).__init__()
+
+	def deal_hands(self, num_of_hands, num_of_cards):
+		hands = []
+		for x in range(num_of_hands):
+			hand = Hand(x)
+			for n in range(num_of_cards):
+				hand.add_card(self.pop_card())
+			hands.append(hand)
+		return hands
+
+exercise_deck = Deck2()
+exercise_deck.shuffle()
+exercise_hands = exercise_deck.deal_hands(3, 5)
+for hand in exercise_hands:
+	print('------')
+	print(hand)
+
+    #=> ------
+    #=> 8 of Hearts
+    #=> Queen of Diamonds
+    #=> 7 of Hearts
+    #=> Ace of Spades
+    #=> 6 of Clubs
+    #=> ------
+    #=> 10 of Diamonds
+    #=> 4 of Hearts
+    #=> Queen of Clubs
+    #=> 3 of Spades
+    #=> 2 of Diamonds
+    #=> ------
+    #=> 8 of Diamonds
+    #=> King of Diamonds
+    #=> 6 of Hearts
+    #=> Queen of Hearts
+    #=> 10 of Spades
+
+"""
+TODO: 
+impliment a rank_self in Hand() that computes the highest poker value of the hand.
+"""
